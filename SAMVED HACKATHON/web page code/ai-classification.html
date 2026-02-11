@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live AI Classification • Smart Road Damage Response</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Cormorant+Garamond:wght@600&display=swap");
+
+      :root {
+        --bg: #f4f7ff;
+        --panel: #ffffff;
+        --ink: #1c2333;
+        --muted: #5b6475;
+        --accent: #ff6b6b;
+        --accent-2: #3c91e6;
+        --accent-3: #f4b942;
+        --border: #e1e6f0;
+        --shadow: 0 20px 50px rgba(28, 35, 51, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Outfit", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 18% 15%, rgba(255, 214, 214, 0.7), transparent 45%),
+          radial-gradient(circle at 85% 10%, rgba(197, 224, 255, 0.8), transparent 40%),
+          radial-gradient(circle at 70% 80%, rgba(255, 239, 200, 0.7), transparent 45%),
+          linear-gradient(180deg, #f6f8ff 0%, #eef2fb 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(28, 35, 51, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(28, 35, 51, 0.04) 1px, transparent 1px);
+        background-size: 56px 56px;
+        pointer-events: none;
+        opacity: 0.4;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(12px);
+        background: rgba(244, 247, 255, 0.78);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 6vw;
+        z-index: 10;
+      }
+
+      .brand-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-logo {
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--border);
+        padding: 6px;
+        box-shadow: 0 12px 24px rgba(20, 20, 20, 0.18);
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand span {
+        font-size: 0.75rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .brand strong {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 1.4rem;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .btn {
+        border: 1px solid var(--ink);
+        background: transparent;
+        padding: 10px 16px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        text-decoration: none;
+        color: var(--ink);
+      }
+
+      .btn.primary {
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        color: #fff;
+        border-color: transparent;
+      }
+
+            .menu {
+        position: relative;
+      }
+
+      .menu-btn {
+        width: 56px;
+        height: 84px;
+        border-radius: 16px;
+        border: 0;
+        background: #14274b;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        color: #dbe3f4;
+        box-shadow: 0 12px 24px rgba(10, 20, 40, 0.2);
+      }
+
+      .menu-btn svg {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+      }
+
+      .menu-panel {
+        position: absolute;
+        left: 56px;
+        top: 0;
+        min-width: 220px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        padding: 10px;
+        display: none;
+        z-index: 20;
+      }
+
+      .menu-panel::before {
+        content: "";
+        position: absolute;
+        left: -14px;
+        top: 0;
+        width: 14px;
+        height: 100%;
+        background: transparent;
+      }
+
+      .menu-panel a {
+        display: block;
+        padding: 8px 10px;
+        text-decoration: none;
+        color: var(--ink);
+        border-radius: 10px;
+        font-size: 0.9rem;
+      }
+
+      .menu-panel a:hover {
+        background: #f7f2ea;
+      }
+
+      .menu:focus-within .menu-panel,
+      .menu:hover .menu-panel {
+        display: block;
+      }
+
+      .menu-panel::before {
+        content: "";
+        position: absolute;
+        left: -14px;
+        top: 0;
+        width: 14px;
+        height: 100%;
+        background: transparent;
+      }main {
+        padding: 34px 6vw 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+        position: relative;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+        min-height: 120px;
+      }
+
+      .card h3 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: rgba(15, 139, 141, 0.12);
+        color: #0f8b8d;
+      }
+
+      .status-pill.alert {
+        background: rgba(240, 90, 40, 0.12);
+        color: #c1451f;
+      }
+
+      .status-pill.warn {
+        background: rgba(246, 195, 67, 0.2);
+        color: #8a6b1c;
+      }
+
+      .stream {
+        display: grid;
+        gap: 12px;
+      }
+
+      .stream-item {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: #f7f2ea;
+        display: grid;
+        gap: 8px;
+      }
+
+      .progress {
+        height: 10px;
+        border-radius: 999px;
+        background: #efe7db;
+        overflow: hidden;
+      }
+
+      .progress span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-3));
+      }
+
+      footer {
+        padding: 22px 6vw 40px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      @media (max-width: 980px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 14px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="menu" aria-label="Task menu">
+                <button class="menu-btn" aria-label="Task menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="18" x2="20" y2="18"></line>
+          </svg>
+        </button>
+        <div class="menu-panel">
+          <a href="index.html">Overview</a>
+          <a href="ai-classification.html">Live AI Classification</a>
+          <a href="live-map.html">Live Map</a>
+          <a href="operations.html">Operations</a>
+          <a href="feedback.html">Feedback</a>
+          <a href="#" id="menu-signout">Sign out</a>
+        </div>
+      </div>
+      <div class="brand-wrap">
+        <img
+          class="brand-logo"
+          src="assets/viking-logo.jpeg"
+          alt="Viking logo"
+          width="96"
+          height="96"
+        />
+        <div class="brand">
+          <span>PS-001 • Team Vikings</span>
+          <strong>Smart Road Damage Response</strong>
+        </div>
+      </div>
+      </header>
+
+    <main>
+      <section class="grid">
+        <div class="card" style="grid-column: span 5">
+          <h3>Live AI Confidence</h3>
+          <p class="muted">Real-time model confidence from incoming camera + sensor feeds.</p>
+          <div class="stream">
+            <div class="stream-item">
+              <div><strong>Frame 48219</strong> · Railway Station Rd</div>
+              <div class="status-pill alert">Poor</div>
+              <div class="progress"><span style="width: 88%"></span></div>
+              <div class="muted">Confidence 88% · 2 seconds ago</div>
+            </div>
+            <div class="stream-item">
+              <div><strong>Frame 48214</strong> · Hotgi Rd</div>
+              <div class="status-pill warn">Moderate</div>
+              <div class="progress"><span style="width: 63%"></span></div>
+              <div class="muted">Confidence 63% · 9 seconds ago</div>
+            </div>
+            <div class="stream-item">
+              <div><strong>Frame 48207</strong> · Akkalkot Rd</div>
+              <div class="status-pill">Good</div>
+              <div class="progress"><span style="width: 77%"></span></div>
+              <div class="muted">Confidence 77% · 18 seconds ago</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 7">
+          <h3>AI Classification Queue</h3>
+          <div class="stream">
+            <div class="stream-item">
+              <div><strong>Camera 12</strong> · Jijamata Chowk</div>
+              <div class="muted">Severity candidates: Poor (0.78), Moderate (0.19), Good (0.03)</div>
+              <div class="progress"><span style="width: 78%"></span></div>
+            </div>
+            <div class="stream-item">
+              <div><strong>Vehicle 07</strong> · Vijapur Rd</div>
+              <div class="muted">Severity candidates: Moderate (0.52), Good (0.43), Poor (0.05)</div>
+              <div class="progress"><span style="width: 52%"></span></div>
+            </div>
+            <div class="stream-item">
+              <div><strong>Camera 03</strong> · Tuljapur Rd</div>
+              <div class="muted">Severity candidates: Good (0.81), Moderate (0.15), Poor (0.04)</div>
+              <div class="progress"><span style="width: 81%"></span></div>
+            </div>
+            <div class="stream-item">
+              <div><strong>Drone 02</strong> · Solapur Bypass</div>
+              <div class="muted">Severity candidates: Poor (0.67), Moderate (0.28), Good (0.05)</div>
+              <div class="progress"><span style="width: 67%"></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Built for Solapur Municipal Corporation · SAMVED Hackathon 2026 · Team Vikings
+    </footer>
+      <script>
+      const CURRENT_USER_KEY = "srdr_current_user_v1";
+      const currentUserRaw = localStorage.getItem(CURRENT_USER_KEY);
+
+      if (!currentUserRaw) {
+        window.location.replace("login.html");
+      } else {
+        try {
+          JSON.parse(currentUserRaw);
+        } catch (error) {
+          localStorage.removeItem(CURRENT_USER_KEY);
+          window.location.replace("login.html");
+        }
+      }
+
+      const signOutLink = document.getElementById("menu-signout");
+      if (signOutLink) {
+        signOutLink.addEventListener("click", (event) => {
+          event.preventDefault();
+          localStorage.removeItem(CURRENT_USER_KEY);
+          window.location.replace("login.html");
+        });
+      }
+    </script>
+  </body>
+</html>
+
+
