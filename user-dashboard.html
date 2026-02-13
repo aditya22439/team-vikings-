@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Dashboard | Smart Road Damage Response</title>
+    <style>
+      :root {
+        --bg: #eef3fb;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #667085;
+        --border: #d2d8e4;
+        --accent: #2563eb;
+        --danger: #b42318;
+        --success: #067647;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(140deg, #f3f5fb 0%, #d9e4f5 100%);
+        color: var(--text);
+      }
+      .wrap {
+        width: min(980px, 94%);
+        margin: 24px auto;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .title { margin: 0; font-size: 1.6rem; }
+      .muted { color: var(--muted); font-size: 0.94rem; }
+      .btn, button, select, input, textarea {
+        font: inherit;
+      }
+      .btn {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+      .btn.primary {
+        border: 0;
+        background: linear-gradient(90deg, #e4572e 0%, #2f80ed 100%);
+        color: #fff;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      label {
+        display: block;
+        margin: 10px 0 6px;
+        font-size: 0.9rem;
+      }
+      input, textarea, select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+      }
+      textarea { min-height: 96px; resize: vertical; }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      video, canvas, img.preview {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #0f172a;
+      }
+      .preview { background: #fff; object-fit: cover; min-height: 220px; }
+      .status { margin-top: 10px; min-height: 1.2em; }
+      .status.error { color: var(--danger); }
+      .status.success { color: var(--success); }
+      .reports li {
+        border-bottom: 1px dashed var(--border);
+        padding: 8px 0;
+        list-style: none;
+      }
+      .reports { margin: 0; padding: 0; }
+      @media (max-width: 820px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="topbar">
+        <div>
+          <h1 class="title">User Road Damage Reporting</h1>
+          <div class="muted" id="welcome">Loading profile...</div>
+        </div>
+        <button class="btn" id="signout-btn">Sign Out</button>
+      </div>
+
+      <div class="grid">
+        <section class="card">
+          <h2 style="margin-top: 0">Create Damage Report</h2>
+          <form id="report-form" novalidate>
+            <label for="title">Title</label>
+            <input id="title" required placeholder="Road crack near bus stop" />
+
+            <label for="description">Description</label>
+            <textarea id="description" placeholder="Add nearby landmark or lane details"></textarea>
+
+            <div class="row">
+              <div>
+                <label for="severity">Severity</label>
+                <select id="severity">
+                  <option value="">Select</option>
+                  <option value="Low">Low</option>
+                  <option value="Moderate">Moderate</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: end; gap: 8px">
+                <button type="button" class="btn" id="loc-btn">Use My Location</button>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label for="latitude">Latitude</label>
+                <input id="latitude" readonly />
+              </div>
+              <div>
+                <label for="longitude">Longitude</label>
+                <input id="longitude" readonly />
+              </div>
+            </div>
+
+            <label>Capture Road Photo</label>
+            <div class="row">
+              <button type="button" class="btn" id="start-camera-btn">Start Camera</button>
+              <button type="button" class="btn" id="capture-btn">Capture Photo</button>
+            </div>
+            <p class="muted" style="margin: 8px 0">If camera does not open, use file upload:</p>
+            <input id="file-photo" type="file" accept="image/*" capture="environment" />
+
+            <div style="margin-top: 12px">
+              <button type="submit" class="btn primary">Submit Report</button>
+            </div>
+            <div class="status" id="form-status" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <aside class="card">
+          <h2 style="margin-top: 0">Camera Preview</h2>
+          <video id="camera" autoplay playsinline muted></video>
+          <canvas id="capture-canvas" style="display: none"></canvas>
+          <img id="photo-preview" class="preview" alt="Captured road photo preview" />
+
+          <h3>My Recent Reports</h3>
+          <ul id="my-reports" class="reports"></ul>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      const CURRENT_USER_KEY = "srdr_current_user_v1";
+      const CURRENT_TOKEN_KEY = "srdr_auth_token_v1";
+      const API_BASE = (() => {
+        const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+        if (window.location.protocol === "file:") return "http://localhost:3000";
+        if (isLocalHost && window.location.port && window.location.port !== "3000") return "http://localhost:3000";
+        return window.location.origin;
+      })();
+
+      function apiUrl(path) {
+        return `${API_BASE}${path}`;
+      }
+
+      function landingPageForRole(role) {
+        if (role === "Municipality") return "municipality-dashboard.html";
+        if (role === "User") return "user-dashboard.html";
+        return "index.html";
+      }
+
+      function signOut() {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        localStorage.removeItem(CURRENT_TOKEN_KEY);
+        window.location.replace("login.html");
+      }
+
+      async function fetchMe() {
+        const token = localStorage.getItem(CURRENT_TOKEN_KEY);
+        if (!token) return null;
+        const response = await fetch(apiUrl("/api/auth/me"), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return null;
+        const payload = await response.json();
+        return payload.user || null;
+      }
+
+      function setStatus(message, type) {
+        const el = document.getElementById("form-status");
+        el.textContent = message;
+        el.className = `status ${type || ""}`;
+      }
+
+      function reportItemHtml(report) {
+        const location = report.latitude && report.longitude
+          ? `${Number(report.latitude).toFixed(5)}, ${Number(report.longitude).toFixed(5)}`
+          : "Location unavailable";
+        return `<li><strong>#${report.id}</strong> ${report.title}<br /><span class="muted">${report.status} | ${location}</span></li>`;
+      }
+
+      async function loadMyReports(currentUserId) {
+        const token = localStorage.getItem(CURRENT_TOKEN_KEY);
+        if (!token) return;
+        const response = await fetch(apiUrl("/api/reports"), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return;
+        const payload = await response.json();
+        const mine = (payload.reports || []).filter((r) => r.created_by_user_id === currentUserId).slice(0, 8);
+        const list = document.getElementById("my-reports");
+        if (!mine.length) {
+          list.innerHTML = "<li class='muted'>No reports yet.</li>";
+          return;
+        }
+        list.innerHTML = mine.map(reportItemHtml).join("");
+      }
+
+      (async () => {
+        const me = await fetchMe();
+        if (!me) {
+          signOut();
+          return;
+        }
+
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(me));
+        if (me.role !== "User") {
+          window.location.replace(landingPageForRole(me.role));
+          return;
+        }
+
+        document.getElementById("welcome").textContent = `Logged in as ${me.name} (${me.userId})`;
+        await loadMyReports(me.userId);
+      })().catch(() => {
+        signOut();
+      });
+
+      document.getElementById("signout-btn").addEventListener("click", signOut);
+
+      document.getElementById("loc-btn").addEventListener("click", () => {
+        if (!navigator.geolocation) {
+          setStatus("Geolocation is not supported on this browser.", "error");
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            document.getElementById("latitude").value = position.coords.latitude.toFixed(6);
+            document.getElementById("longitude").value = position.coords.longitude.toFixed(6);
+            setStatus("Location captured.", "success");
+          },
+          (error) => {
+            setStatus(`Unable to read location (${error.message}).`, "error");
+          },
+          { enableHighAccuracy: true, timeout: 10000 },
+        );
+      });
+
+      let mediaStream = null;
+      let capturedPhotoData = "";
+      const video = document.getElementById("camera");
+      const canvas = document.getElementById("capture-canvas");
+      const preview = document.getElementById("photo-preview");
+
+      document.getElementById("start-camera-btn").addEventListener("click", async () => {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } },
+            audio: false,
+          });
+          video.srcObject = mediaStream;
+          setStatus("Camera started.", "success");
+        } catch (error) {
+          setStatus(`Camera access failed (${error.message}).`, "error");
+        }
+      });
+
+      document.getElementById("capture-btn").addEventListener("click", () => {
+        if (!video.srcObject) {
+          setStatus("Start camera first.", "error");
+          return;
+        }
+        const width = video.videoWidth || 1280;
+        const height = video.videoHeight || 720;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, width, height);
+        capturedPhotoData = canvas.toDataURL("image/jpeg", 0.82);
+        preview.src = capturedPhotoData;
+        setStatus("Photo captured.", "success");
+      });
+
+      document.getElementById("file-photo").addEventListener("change", (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          capturedPhotoData = String(reader.result || "");
+          preview.src = capturedPhotoData;
+          setStatus("Photo loaded.", "success");
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById("report-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setStatus("", "");
+
+        const token = localStorage.getItem(CURRENT_TOKEN_KEY);
+        if (!token) {
+          signOut();
+          return;
+        }
+
+        const title = document.getElementById("title").value.trim();
+        const description = document.getElementById("description").value.trim();
+        const severity = document.getElementById("severity").value;
+        const latitude = document.getElementById("latitude").value;
+        const longitude = document.getElementById("longitude").value;
+
+        if (!title) {
+          setStatus("Title is required.", "error");
+          return;
+        }
+        if (!latitude || !longitude) {
+          setStatus("Please capture location first.", "error");
+          return;
+        }
+        if (!capturedPhotoData) {
+          setStatus("Please capture or upload a road photo.", "error");
+          return;
+        }
+
+        const response = await fetch(apiUrl("/api/reports"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            severity,
+            latitude: Number(latitude),
+            longitude: Number(longitude),
+            photoData: capturedPhotoData,
+          }),
+        });
+
+        const payload = await response.json();
+        if (!response.ok) {
+          setStatus(payload.error || "Unable to submit report.", "error");
+          return;
+        }
+
+        setStatus(`Report submitted successfully (ID: ${payload.id}).`, "success");
+        document.getElementById("report-form").reset();
+        document.getElementById("latitude").value = "";
+        document.getElementById("longitude").value = "";
+        capturedPhotoData = "";
+        preview.removeAttribute("src");
+        const meRaw = localStorage.getItem(CURRENT_USER_KEY);
+        const me = meRaw ? JSON.parse(meRaw) : null;
+        if (me && me.userId) {
+          await loadMyReports(me.userId);
+        }
+      });
+    </script>
+  </body>
+</html>

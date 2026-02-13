@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Municipality Dashboard | Smart Road Damage Response</title>
+    <style>
+      :root {
+        --bg: #ecf2fb;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #667085;
+        --border: #d5ddec;
+        --accent: #1d4ed8;
+        --danger: #b42318;
+        --success: #067647;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        color: var(--text);
+        background: linear-gradient(145deg, #f7f9fc, #d8e3f5);
+      }
+      .wrap {
+        width: min(1120px, 95%);
+        margin: 22px auto 30px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .btn {
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+      .btn.primary {
+        color: #fff;
+        border: 0;
+        background: linear-gradient(90deg, #e4572e 0%, #2f80ed 100%);
+      }
+      .muted { color: var(--muted); }
+      .status {
+        min-height: 1.2em;
+        margin-top: 10px;
+      }
+      .status.error { color: var(--danger); }
+      .status.success { color: var(--success); }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      select {
+        padding: 9px 11px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      .report {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        display: grid;
+        grid-template-columns: 170px 1fr;
+        gap: 12px;
+      }
+      .photo {
+        width: 100%;
+        height: 130px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #f3f6fb;
+      }
+      .meta {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+      }
+      .pill {
+        background: #eef3ff;
+        border: 1px solid #d6e2ff;
+        color: #274a9d;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.82rem;
+      }
+      .actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .actions select {
+        min-width: 140px;
+      }
+      @media (max-width: 760px) {
+        .report {
+          grid-template-columns: 1fr;
+        }
+        .photo {
+          height: 220px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="topbar">
+        <div>
+          <h1 style="margin: 0">Municipality Operations Dashboard</h1>
+          <div class="muted" id="welcome">Loading profile...</div>
+        </div>
+        <button class="btn" id="signout-btn">Sign Out</button>
+      </div>
+
+      <div class="toolbar">
+        <select id="status-filter">
+          <option value="">All Statuses</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <button class="btn primary" id="refresh-btn">Refresh Reports</button>
+      </div>
+
+      <div class="status" id="page-status" aria-live="polite"></div>
+      <section id="reports" class="grid"></section>
+    </div>
+
+    <script>
+      const CURRENT_USER_KEY = "srdr_current_user_v1";
+      const CURRENT_TOKEN_KEY = "srdr_auth_token_v1";
+      const STATUS_VALUES = ["Open", "In Progress", "Resolved", "Rejected"];
+      const API_BASE = (() => {
+        const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+        if (window.location.protocol === "file:") return "http://localhost:3000";
+        if (isLocalHost && window.location.port && window.location.port !== "3000") return "http://localhost:3000";
+        return window.location.origin;
+      })();
+
+      function apiUrl(path) {
+        return `${API_BASE}${path}`;
+      }
+
+      function landingPageForRole(role) {
+        if (role === "Municipality") return "municipality-dashboard.html";
+        if (role === "User") return "user-dashboard.html";
+        return "index.html";
+      }
+
+      function signOut() {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        localStorage.removeItem(CURRENT_TOKEN_KEY);
+        window.location.replace("login.html");
+      }
+
+      function setStatus(message, type) {
+        const el = document.getElementById("page-status");
+        el.textContent = message;
+        el.className = `status ${type || ""}`;
+      }
+
+      async function fetchMe() {
+        const token = localStorage.getItem(CURRENT_TOKEN_KEY);
+        if (!token) return null;
+        const response = await fetch(apiUrl("/api/auth/me"), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) return null;
+        const payload = await response.json();
+        return payload.user || null;
+      }
+
+      function reportHtml(report) {
+        const location = (report.latitude !== null && report.longitude !== null)
+          ? `${Number(report.latitude).toFixed(5)}, ${Number(report.longitude).toFixed(5)}`
+          : "No location";
+        const photo = report.photo_data
+          ? `<img class="photo" src="${report.photo_data}" alt="Road damage" />`
+          : `<div class="photo" style="display:flex;align-items:center;justify-content:center;color:#64748b">No photo</div>`;
+        const options = STATUS_VALUES
+          .map((s) => `<option value="${s}"${s === report.status ? " selected" : ""}>${s}</option>`)
+          .join("");
+        const mapLink = (report.latitude !== null && report.longitude !== null)
+          ? `https://www.google.com/maps?q=${report.latitude},${report.longitude}`
+          : "#";
+
+        return `
+          <article class="report" data-report-id="${report.id}">
+            ${photo}
+            <div>
+              <h3 style="margin:0 0 4px">${report.title}</h3>
+              <div class="muted">${report.description || "No description"}</div>
+              <div class="meta">
+                <span class="pill">#${report.id}</span>
+                <span class="pill">Severity: ${report.severity || "N/A"}</span>
+                <span class="pill">Status: ${report.status}</span>
+                <span class="pill">By: ${report.created_by_name || "Unknown"} (${report.created_by_user_id || "-"})</span>
+              </div>
+              <div class="meta">
+                <a href="${mapLink}" target="_blank" rel="noopener noreferrer">Location: ${location}</a>
+                <span class="muted">Created: ${new Date(report.created_at).toLocaleString()}</span>
+              </div>
+              <div class="actions">
+                <select class="status-select">${options}</select>
+                <button class="btn update-status-btn">Update Status</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      async function loadReports() {
+        setStatus("Loading reports...", "");
+        const token = localStorage.getItem(CURRENT_TOKEN_KEY);
+        const filter = document.getElementById("status-filter").value;
+        const container = document.getElementById("reports");
+
+        const response = await fetch(apiUrl("/api/reports"), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          setStatus("Failed to load reports.", "error");
+          return;
+        }
+
+        const payload = await response.json();
+        let list = payload.reports || [];
+        if (filter) list = list.filter((r) => r.status === filter);
+
+        if (!list.length) {
+          container.innerHTML = "<div class='muted'>No reports found for the selected filter.</div>";
+          setStatus("", "");
+          return;
+        }
+
+        container.innerHTML = list.map(reportHtml).join("");
+        setStatus(`Loaded ${list.length} reports.`, "success");
+      }
+
+      async function updateReportStatus(reportId, status) {
+        const token = localStorage.getItem(CURRENT_TOKEN_KEY);
+        const response = await fetch(apiUrl(`/api/reports/${reportId}/status`), {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status }),
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error || "Unable to update status");
+        }
+      }
+
+      document.getElementById("reports").addEventListener("click", async (event) => {
+        const button = event.target.closest(".update-status-btn");
+        if (!button) return;
+        const card = event.target.closest("[data-report-id]");
+        if (!card) return;
+        const reportId = card.getAttribute("data-report-id");
+        const select = card.querySelector(".status-select");
+        const status = select ? select.value : "";
+        if (!STATUS_VALUES.includes(status)) {
+          setStatus("Invalid status selected.", "error");
+          return;
+        }
+        try {
+          await updateReportStatus(reportId, status);
+          setStatus(`Report #${reportId} updated to ${status}.`, "success");
+          await loadReports();
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
+      });
+
+      document.getElementById("status-filter").addEventListener("change", () => {
+        loadReports().catch(() => {
+          setStatus("Unable to refresh reports.", "error");
+        });
+      });
+
+      document.getElementById("refresh-btn").addEventListener("click", () => {
+        loadReports().catch(() => {
+          setStatus("Unable to refresh reports.", "error");
+        });
+      });
+
+      document.getElementById("signout-btn").addEventListener("click", signOut);
+
+      (async () => {
+        const me = await fetchMe();
+        if (!me) {
+          signOut();
+          return;
+        }
+
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(me));
+        if (me.role !== "Municipality") {
+          window.location.replace(landingPageForRole(me.role));
+          return;
+        }
+
+        document.getElementById("welcome").textContent = `Logged in as ${me.name} (${me.userId})`;
+        await loadReports();
+      })().catch(() => {
+        signOut();
+      });
+    </script>
+  </body>
+</html>

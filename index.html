@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Overview | Smart Road Damage Response</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Cormorant+Garamond:wght@600&display=swap");
+
+      :root {
+        --bg: #f4f7ff;
+        --panel: #ffffff;
+        --ink: #1c2333;
+        --muted: #5b6475;
+        --accent: #ff6b6b;
+        --accent-2: #3c91e6;
+        --accent-3: #f4b942;
+        --border: #e1e6f0;
+        --shadow: 0 20px 50px rgba(28, 35, 51, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Outfit", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 18% 15%, rgba(255, 214, 214, 0.7), transparent 45%),
+          radial-gradient(circle at 85% 10%, rgba(197, 224, 255, 0.8), transparent 40%),
+          radial-gradient(circle at 70% 80%, rgba(255, 239, 200, 0.7), transparent 45%),
+          linear-gradient(180deg, #f6f8ff 0%, #eef2fb 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(28, 35, 51, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(28, 35, 51, 0.04) 1px, transparent 1px);
+        background-size: 56px 56px;
+        pointer-events: none;
+        opacity: 0.4;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        backdrop-filter: blur(12px);
+        background: rgba(244, 247, 255, 0.78);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 6vw;
+        z-index: 10;
+      }
+
+      .menu {
+        position: relative;
+      }
+
+      .menu-btn {
+        width: 56px;
+        height: 84px;
+        border-radius: 16px;
+        border: 0;
+        background: #14274b;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        color: #dbe3f4;
+        box-shadow: 0 12px 24px rgba(10, 20, 40, 0.2);
+      }
+
+      .menu-btn svg {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+      }
+
+      .menu-panel {
+        position: absolute;
+        left: 56px;
+        top: 0;
+        min-width: 220px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        padding: 10px;
+        display: none;
+        z-index: 20;
+      }
+
+      .menu-panel::before {
+        content: "";
+        position: absolute;
+        left: -14px;
+        top: 0;
+        width: 14px;
+        height: 100%;
+        background: transparent;
+      }
+
+      .menu-panel a {
+        display: block;
+        padding: 8px 10px;
+        text-decoration: none;
+        color: var(--ink);
+        border-radius: 10px;
+        font-size: 0.9rem;
+      }
+
+      .menu-panel a:hover {
+        background: #f7f2ea;
+      }
+
+      .menu:focus-within .menu-panel,
+      .menu:hover .menu-panel {
+        display: block;
+      }
+
+      .brand-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-logo {
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--border);
+        padding: 6px;
+        box-shadow: 0 12px 24px rgba(20, 20, 20, 0.18);
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand span {
+        font-size: 0.75rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .brand strong {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 1.4rem;
+      }
+
+      main {
+        padding: 34px 6vw 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+        position: relative;
+      }
+
+      .hero {
+        background: linear-gradient(120deg, rgba(255, 107, 107, 0.13), rgba(60, 145, 230, 0.13));
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 22px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: 1.7rem;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .metric strong {
+        font-size: 1.8rem;
+      }
+
+      .module-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .module-list a {
+        display: block;
+        text-decoration: none;
+        color: var(--ink);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f7f2ea;
+        padding: 12px 14px;
+      }
+
+      .module-list a:hover {
+        background: #efe6d7;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: rgba(15, 139, 141, 0.12);
+        color: #0f8b8d;
+        padding: 3px 10px;
+        font-size: 0.78rem;
+      }
+
+      .pill.warn {
+        background: rgba(246, 195, 67, 0.2);
+        color: #8a6b1c;
+      }
+
+      .pill.alert {
+        background: rgba(240, 90, 40, 0.12);
+        color: #c1451f;
+      }
+
+      .timeline {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .timeline li {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 11px 12px;
+        background: #f7f2ea;
+      }
+
+      footer {
+        padding: 22px 6vw 40px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      @media (max-width: 980px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 14px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="menu" aria-label="Task menu">
+        <button class="menu-btn" aria-label="Task menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="18" x2="20" y2="18"></line>
+          </svg>
+        </button>
+        <div class="menu-panel">
+          <a href="index.html">Overview</a>
+          <a href="ai-classification.html">Live AI Classification</a>
+          <a href="live-map.html">Live Map</a>
+          <a href="operations.html">Operations</a>
+          <a href="feedback.html">Feedback</a>
+          <a href="#" id="menu-signout">Sign out</a>
+        </div>
+      </div>
+
+      <div class="brand-wrap">
+        <img
+          class="brand-logo"
+          src="assets/viking-logo.jpeg"
+          alt="Viking logo"
+          width="96"
+          height="96"
+        />
+        <div class="brand">
+          <span>TEAM VIKINGS</span>
+          <strong>Smart Road Damage Response</strong>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Citywide Road Intelligence Overview</h1>
+        <p class="muted">
+          Unified monitoring for citizen complaints, AI detections, and municipality action status.
+        </p>
+      </section>
+
+      <section class="grid">
+        <div class="card" style="grid-column: span 3">
+          <h3>Total Reports</h3>
+          <div class="metric">
+            <strong>194</strong>
+            <span class="muted">Past 7 days</span>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 3">
+          <h3>Open Cases</h3>
+          <div class="metric">
+            <strong>42</strong>
+            <span class="muted">Awaiting assignment</span>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 3">
+          <h3>In Progress</h3>
+          <div class="metric">
+            <strong>29</strong>
+            <span class="muted">Field teams active</span>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 3">
+          <h3>Resolved</h3>
+          <div class="metric">
+            <strong>123</strong>
+            <span class="muted">Verified this week</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="card" style="grid-column: span 6">
+          <h3>System Modules</h3>
+          <ul class="module-list">
+            <li>
+              <a href="ai-classification.html">
+                <strong>Live AI Classification</strong><br />
+                <span class="muted">Stream confidence and severity predictions</span>
+              </a>
+            </li>
+            <li>
+              <a href="live-map.html">
+                <strong>Live Damage Map</strong><br />
+                <span class="muted">Road hotspots and geotagged incidents</span>
+              </a>
+            </li>
+            <li>
+              <a href="operations.html">
+                <strong>Operations Center</strong><br />
+                <span class="muted">Repair pipeline, dispatch, and action tracking</span>
+              </a>
+            </li>
+            <li>
+              <a href="feedback.html">
+                <strong>User Feedback</strong><br />
+                <span class="muted">Citizen sentiment and service quality pulse</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card" style="grid-column: span 6">
+          <h3>Recent Alert Timeline</h3>
+          <ul class="timeline">
+            <li>
+              <span class="pill alert">High Priority</span><br />
+              Railway Station Road: deep pothole cluster detected 7 minutes ago.
+            </li>
+            <li>
+              <span class="pill warn">Moderate</span><br />
+              Hotgi Road: repeated vibration spikes from two sensor units.
+            </li>
+            <li>
+              <span class="pill">Resolved</span><br />
+              Akkalkot Road: repair completed and verified by crew photos.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Built for Solapur Municipal Corporation | SAMVED Hackathon 2026 | Team Vikings
+    </footer>
+
+    <script>
+      const CURRENT_USER_KEY = "srdr_current_user_v1";
+      const CURRENT_TOKEN_KEY = "srdr_auth_token_v1";
+      const API_BASE = (() => {
+        const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+        if (window.location.protocol === "file:") return "http://localhost:3000";
+        if (isLocalHost && window.location.port && window.location.port !== "3000") {
+          return "http://localhost:3000";
+        }
+        return window.location.origin;
+      })();
+
+      function apiUrl(path) {
+        return `${API_BASE}${path}`;
+      }
+
+      async function requireAuth() {
+        const token = localStorage.getItem(CURRENT_TOKEN_KEY);
+        if (!token) {
+          localStorage.removeItem(CURRENT_USER_KEY);
+          window.location.replace("login.html");
+          return;
+        }
+
+        try {
+          const response = await fetch(apiUrl("/api/auth/me"), {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Unauthorized");
+          }
+
+          const payload = await response.json();
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(payload.user));
+        } catch (error) {
+          localStorage.removeItem(CURRENT_USER_KEY);
+          localStorage.removeItem(CURRENT_TOKEN_KEY);
+          window.location.replace("login.html");
+        }
+      }
+
+      requireAuth();
+
+      const signOutLink = document.getElementById("menu-signout");
+      if (signOutLink) {
+        signOutLink.addEventListener("click", (event) => {
+          event.preventDefault();
+          localStorage.removeItem(CURRENT_USER_KEY);
+          localStorage.removeItem(CURRENT_TOKEN_KEY);
+          window.location.replace("login.html");
+        });
+      }
+    </script>
+  </body>
+</html>

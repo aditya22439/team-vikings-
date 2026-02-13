@@ -1,0 +1,343 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign In Ã¢â‚¬Â¢ Smart Road Damage Response</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Cormorant+Garamond:wght@600&display=swap");
+
+      :root {
+        --bg: #f4f7ff;
+        --panel: #ffffff;
+        --ink: #1c2333;
+        --muted: #5b6475;
+        --accent: #ff6b6b;
+        --accent-2: #3c91e6;
+        --border: #e1e6f0;
+        --shadow: 0 20px 50px rgba(28, 35, 51, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Outfit", "Segoe UI", sans-serif;
+        color: var(--ink);
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 18% 15%, rgba(255, 214, 214, 0.7), transparent 45%),
+          radial-gradient(circle at 85% 10%, rgba(197, 224, 255, 0.8), transparent 40%),
+          radial-gradient(circle at 70% 80%, rgba(255, 239, 200, 0.7), transparent 45%),
+          linear-gradient(180deg, #f6f8ff 0%, #eef2fb 100%);
+        display: grid;
+        place-items: center;
+        padding: 40px 6vw;
+      }
+
+      .card {
+        width: min(480px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 26px;
+        box-shadow: var(--shadow);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .brand-logo {
+        width: 64px;
+        height: 64px;
+        object-fit: cover;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--border);
+        padding: 4px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.5rem;
+      }
+
+      p {
+        margin: 0 0 18px;
+        color: var(--muted);
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+      }
+
+      label {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        font-size: 0.95rem;
+      }
+
+      .btn {
+        border: none;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.95rem;
+      }
+
+      .link {
+        margin-top: 14px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .link a {
+        color: var(--ink);
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+      }
+
+      .link a:hover {
+        border-bottom-color: var(--accent);
+      }
+
+      .hint {
+        margin: 2px 0 0;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .status {
+        margin-top: 10px;
+        font-size: 0.88rem;
+        min-height: 1.2em;
+      }
+
+      .status.error {
+        color: #b42318;
+      }
+
+      .status.success {
+        color: #067647;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="brand">
+        <img
+          class="brand-logo"
+          src="assets/viking-logo.jpeg"
+          alt="Viking logo"
+          width="64"
+          height="64"
+        />
+        <div>
+          <div style="font-family: 'Cormorant Garamond', serif; font-size: 1.2rem">
+            Smart Road Damage Response
+          </div>
+          <div style="font-size: 0.75rem; color: var(--muted); letter-spacing: 0.2em">
+            TEAM VIKINGS
+          </div>
+        </div>
+      </div>
+      <h1>Sign In</h1>
+      <p>Create your account for Developer, Municipality, or User access.</p>
+      <form id="signup-form" novalidate>
+        <div>
+          <label for="name">Full Name</label>
+          <input id="name" type="text" placeholder="Your name" required />
+        </div>
+        <div>
+          <label for="user-id">Username (for User role)</label>
+          <input id="user-id" type="text" placeholder="6 to 10 chars, at least 2 numbers" />
+          <p class="hint">Required only when Account Type is User.</p>
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label for="phone">Phone Number</label>
+          <input id="phone" type="tel" placeholder="10-digit mobile" />
+          <p class="hint">Use either Email or Phone (only one).</p>
+        </div>
+        <div>
+                    <label for="role">Account Type</label>
+          <select id="role" required>
+            <option value="Developer">Developer</option>
+            <option value="Municipality">Municipality</option>
+            <option value="User">User</option>
+          </select>
+        </div>
+        <div>
+          <label for="password">Create Password</label>
+          <input id="password" type="password" placeholder="Create password" required />
+          <p class="hint">Minimum 8 characters, at least 1 uppercase letter and 1 number.</p>
+        </div>
+        <div>
+          <label for="confirm-password">Confirm Password</label>
+          <input id="confirm-password" type="password" placeholder="Confirm password" required />
+        </div>
+        <button class="btn" type="submit">Create Account</button>
+      </form>
+      <div class="status" id="signup-status" aria-live="polite"></div>
+      <div class="link">
+        Already have an account? <a href="login.html">Login</a>
+      </div>
+      <div class="link">
+        Back to <a href="index.html">Overview</a>
+      </div>
+    </div>
+        <script>
+      const CURRENT_USER_KEY = "srdr_current_user_v1";
+      const CURRENT_TOKEN_KEY = "srdr_auth_token_v1";
+      const ALLOWED_ROLES = ["Developer", "Municipality", "User"];
+      const API_BASE = (() => {
+        const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+        if (window.location.protocol === "file:") return "http://localhost:3000";
+        if (isLocalHost && window.location.port && window.location.port !== "3000") {
+          return "http://localhost:3000";
+        }
+        return window.location.origin;
+      })();
+
+      function apiUrl(path) {
+        return `${API_BASE}${path}`;
+      }
+      const signupForm = document.getElementById("signup-form");
+      const signupStatus = document.getElementById("signup-status");
+      const roleSelect = document.getElementById("role");
+      const userIdInput = document.getElementById("user-id");
+
+      function isPasswordValid(password) {
+        return password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+      }
+
+      function isAllowedRole(role) {
+        return ALLOWED_ROLES.includes(role);
+      }
+
+      function isCustomUserIdValid(userId) {
+        return /^(?=(?:.*\d){2,})[A-Z0-9]{6,10}$/.test(userId);
+      }
+
+      function getLandingPageForRole(role) {
+        if (role === "User") return "user-dashboard.html";
+        if (role === "Municipality") return "municipality-dashboard.html";
+        return "index.html";
+      }
+
+      function setStatus(message, type) {
+        signupStatus.textContent = message;
+        signupStatus.className = `status ${type}`;
+      }
+
+      function syncUserIdRequirement() {
+        const role = roleSelect.value;
+        userIdInput.required = role === "User";
+      }
+
+      syncUserIdRequirement();
+      roleSelect.addEventListener("change", syncUserIdRequirement);
+
+      signupForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const name = document.getElementById("name").value.trim();
+        const userId = document.getElementById("user-id").value.trim().toUpperCase();
+        const email = document.getElementById("email").value.trim().toLowerCase();
+        const phone = document.getElementById("phone").value.trim();
+        const role = document.getElementById("role").value;
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirm-password").value;
+
+        if (!name || !password || !confirmPassword) {
+          setStatus("Please fill all required fields.", "error");
+          return;
+        }
+
+        const hasEmail = Boolean(email);
+        const hasPhone = Boolean(phone);
+        if (!hasEmail && !hasPhone) {
+          setStatus("Please provide either Email or Phone.", "error");
+          return;
+        }
+        if (hasEmail && hasPhone) {
+          setStatus("Use either Email or Phone, not both.", "error");
+          return;
+        }
+
+        if (!isAllowedRole(role)) {
+          setStatus("Account type must be Developer, Municipality, or User.", "error");
+          return;
+        }
+
+        if (role === "User" && !isCustomUserIdValid(userId)) {
+          setStatus(
+            "For User role, username must be 6 to 10 characters with at least 2 numbers.",
+            "error",
+          );
+          return;
+        }
+
+        if (!isPasswordValid(password)) {
+          setStatus(
+            "Password must be 8+ characters with at least one uppercase letter and one number.",
+            "error",
+          );
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          setStatus("Password and confirm password do not match.", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(apiUrl("/api/auth/signup"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, userId, email, phone, role, password }),
+          });
+
+          const payload = await response.json();
+
+          if (!response.ok) {
+            setStatus(payload.error || "Unable to create account.", "error");
+            return;
+          }
+
+          localStorage.setItem(CURRENT_TOKEN_KEY, payload.token);
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(payload.user));
+
+          setStatus(`Account created. Your User ID is ${payload.userId}. Redirecting...`, "success");
+          signupForm.reset();
+          setTimeout(() => {
+            window.location.href = getLandingPageForRole(payload.user.role);
+          }, 900);
+        } catch (error) {
+          setStatus("Server unreachable. Start backend and try again.", "error");
+        }
+      });
+    </script>
+  </body>
+</html>
+
